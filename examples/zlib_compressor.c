@@ -1,16 +1,7 @@
-/* zpipe.c: example of proper use of zlib's inflate() and deflate()
-   Not copyrighted -- provided to the public domain
-   Version 1.4  11 December 2005  Mark Adler */
+/* zlib_compressor.c: takes in a file name and comp/decomp
+   author: Vivian Liu
+   Modified from Mark Adler's zpipe.c */
 
-/* Version history:
-   1.0  30 Oct 2004  First version
-   1.1   8 Nov 2004  Add void casting for unused return values
-                     Use switch statement for inflate() return values
-   1.2   9 Nov 2004  Add assertions to document zlib guarantees
-   1.3   6 Apr 2005  Remove incorrect assertion in inf()
-   1.4  11 Dec 2005  Add hack to avoid MSDOS end-of-line conversions
-                     Avoid some compiler warnings for input and output buffers
- */
 
 #include <stdio.h>
 #include <string.h>
@@ -33,6 +24,7 @@
    level is supplied, Z_VERSION_ERROR if the version of zlib.h and the
    version of the library linked do not match, or Z_ERRNO if there is
    an error reading or writing the files. */
+// author: Mark Adler
 int def(FILE *source, FILE *dest, int level)
 {
     int ret, flush;
@@ -89,6 +81,7 @@ int def(FILE *source, FILE *dest, int level)
    invalid or incomplete, Z_VERSION_ERROR if the version of zlib.h and
    the version of the library linked do not match, or Z_ERRNO if there
    is an error reading or writing the files. */
+// author: Mark Adler
 int inf(FILE *source, FILE *dest)
 {
     int ret;
@@ -148,6 +141,7 @@ int inf(FILE *source, FILE *dest)
 }
 
 /* report a zlib or i/o error */
+// author: Mark Adler
 void zerr(int ret)
 {
     fputs("zpipe: ", stderr);
@@ -172,7 +166,7 @@ void zerr(int ret)
     }
 }
 
-/* compress or decompress from stdin to stdout */
+/* compress or decompress from user input */
 int main(int argc, char **argv)
 {
     int ret; 
@@ -180,20 +174,23 @@ int main(int argc, char **argv)
     char *filename = argv[1];
     char *mode = argv[2];
 
+    // check if user inputed a valid file name
     FILE *fp;
     fp = fopen(filename, "r");
     if(fp == NULL) {
         printf("\nFile not found!");   
         exit(1); 
     }
+
+    // print out the original file size in bytes
     fseek(fp, 0L, SEEK_END); 
     int sz = ftell(fp);
-    printf("The original file size is: %d\n", sz);
+    printf("The original file size is: %d\n bytes", sz);
     fseek(fp, 0, SEEK_SET);
 
     FILE *fp2;
 
-    /* do compression if no arguments */
+    /* do compression if operation is "comp" */
     if (strcmp(mode, "comp") == 0) {
         fp2 = fopen(strcat(filename, ".z"), "w+");
         ret = def(fp, fp2, Z_DEFAULT_COMPRESSION);
@@ -202,7 +199,7 @@ int main(int argc, char **argv)
         printf("Successfully compressed.\n");
     }
 
-    /* do decompression if -d specified */
+    /* do decompression if operation is "decomp" */
     else if (strcmp(mode, "decomp") == 0) {
         char newFileName[100];
         strncpy(newFileName, filename, strlen(filename) - 2);
@@ -217,16 +214,16 @@ int main(int argc, char **argv)
 
     /* otherwise, report usage */
     else {
-        fputs("zlib_data_compression usage: zlib_data_compression < source > [comp/decomp]\n", stderr);
+        fputs("zlib_data_compression usage: zlib_data_compression filename comp/decomp\n", stderr);
     }
 
     fseek(fp2, 0L, SEEK_END); 
     int sz2 = ftell(fp2);
     printf("The final file size is: %d\n", sz2);
 
-/*
+    // print out the 
     double ratio = (double)sz/(double)sz2;
     printf("The final file size is %d percent of the original file.", ratio);
-*/
+
     return ret;
 }
